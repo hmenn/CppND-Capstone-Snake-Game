@@ -56,10 +56,12 @@ int main(int argc, char *argv[]) {
     snakeSpeed = 0.3;
   }
 
-  Renderer renderer(screenWidth, screenHeight, kGridWidth, kGridHeight);
-  Controller controller;
+  auto gameStopperMutex = std::make_shared<std::mutex>();
+  auto renderer = std::make_shared<Renderer>(screenWidth, screenHeight,
+                                             kGridWidth, kGridHeight);
+  Controller controller(gameStopperMutex, renderer);
   Game game(kGridWidth, kGridHeight, snakeSpeed);
-  game.Run(controller, renderer, kMsPerFrame);
+  game.Run(controller, renderer, kMsPerFrame, gameStopperMutex);
   std::cout << "Game has terminated successfully!\n";
   std::cout << "Score: " << game.GetScore() << "\n";
   std::cout << "Size: " << game.GetSize() << "\n";

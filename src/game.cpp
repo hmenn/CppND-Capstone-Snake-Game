@@ -1,6 +1,7 @@
 #include "game.h"
 
 #include <iostream>
+#include <thread>
 
 #include "SDL.h"
 
@@ -12,8 +13,9 @@ Game::Game(std::size_t grid_width, std::size_t grid_height, float snake_speed)
   PlaceFood();
 }
 
-void Game::Run(Controller const &controller, Renderer &renderer,
-               std::size_t target_frame_duration) {
+void Game::Run(Controller &controller, std::shared_ptr<Renderer> renderer,
+               std::size_t target_frame_duration,
+               std::shared_ptr<std::mutex> &mtx) {
   Uint32 title_timestamp = SDL_GetTicks();
   Uint32 frame_start;
   Uint32 frame_end;
@@ -21,13 +23,18 @@ void Game::Run(Controller const &controller, Renderer &renderer,
   int frame_count = 0;
   bool running = true;
 
-  while (running) {
-    frame_start = SDL_GetTicks();
+  std::thread controllerThread([&]() {
+    while (running) {
+      controller.HandleInput(running, snake);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+  });
 
-    // Input, Update, Render - the main game loop.
-    controller.HandleInput(running, snake);
+  while (running) {
+    std::unique_lock<std::mutex> lck(*mtx);
+    frame_start = SDL_GetTicks();
     Update();
-    renderer.Render(snake, food);
+    renderer->Render(snake, food);
 
     frame_end = SDL_GetTicks();
 
@@ -38,10 +45,11 @@ void Game::Run(Controller const &controller, Renderer &renderer,
 
     // After every second, update the window title.
     if (frame_end - title_timestamp >= 1000) {
-      renderer.UpdateWindowTitle(score, frame_count);
+      renderer->UpdateWindowTitle(score, frame_count);
       frame_count = 0;
       title_timestamp = frame_end;
     }
+    lck.unlock();
 
     // If the time for this frame is too small (i.e. frame_duration is
     // smaller than the target ms_per_frame), delay the loop to
@@ -50,6 +58,10 @@ void Game::Run(Controller const &controller, Renderer &renderer,
       SDL_Delay(target_frame_duration - frame_duration);
     }
   }
+
+  if (controllerThread.joinable()) {
+    controllerThread.join();
+  };
 }
 
 void Game::PlaceFood() {

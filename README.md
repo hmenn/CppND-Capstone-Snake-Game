@@ -18,6 +18,23 @@ In this project, you can build your own C++ application or extend this Snake gam
   ./SnakeGame -h
   ```
 
+### OOP
+
+- Define new private members like mutex references(valid for Memory management), game state and speed
+- Use lambda functions with thread
+- Overload Renderer::UpdateWindowTitle for strings
+
+### Memory Management
+
+- Store Renderer as shared_ptr and share between Controller and Game logic
+  - Controller will update title on game pause
+
+### Concurrency
+
+- Add controller thread that handles keyboard events
+  - Use 'SPACE' key to stop, resume game
+- Use mutex between controller and game_run loop
+
 ## Dependencies for Running Locally
 
 - cmake >= 3.7

@@ -19,4 +19,4 @@ include_directories(${SDL2_INCLUDE_DIRS} src ${Boost_INCLUDE_DIRS})
 
 add_executable(SnakeGame src/main.cpp src/game.cpp src/controller.cpp src/renderer.cpp src/snake.cpp)
 string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
-target_link_libraries(SnakeGame ${SDL2_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(SnakeGame ${SDL2_LIBRARIES} ${Boost_LIBRARIES} pthread)
